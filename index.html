@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>工班管理系統 - 模擬版</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f5f5f5;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    
+    .page {
+      display: none;
+      min-height: 100vh;
+      background: white;
+    }
+    
+    .page.active {
+      display: block;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      text-align: center;
+      position: relative;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .back-btn {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: white;
+      font-size: 20px;
+      cursor: pointer;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .back-btn:hover {
+      background: rgba(255,255,255,0.3);
+    }
+    
+    .container {
+      padding: 20px;
+    }
+    
+    .login-box {
+      background: white;
+      padding: 40px 30px;
+      border-radius: 20px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+      margin-top: 80px;
+    }
+    
+    .login-box h2 {
+      text-align: center;
+      margin-bottom: 30px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-size: 28px;
+    }
+    
+    .role-select {
+      display: flex;
+      gap: 15px;
+      margin-top: 30px;
+    }
+    
+    .role-btn {
+      flex: 1;
+      padding: 30px 20px;
+      border: 2px solid #e0e0e0;
+      border-radius: 15px;
+      background: white;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 16px;
+    }
+    
+    .role-btn:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+      border-color: #667eea;
+    }
+    
+    .role-icon {
+      font-size: 48px;
+      margin-bottom: 15px;
+    }
+    
+    .task-card {
+      background: white;
+      padding: 20px;
+      border-radius: 15px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      cursor: pointer;
+      transition: all 0.3s;
+      border: 2px solid transparent;
+    }
+    
+    .task-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+      border-color: #667eea;
+    }
+    
+    .task-title {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 12px;
+      color: #333;
+    }
+    
+    .task-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 8px;
+    }
+    
+    .status-badge {
+      padding: 5px 15px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    
+    .status-pending {
+      background: #fff3cd;
+      color: #856404;
+    }
+    
+    .status-progress {
+      background: #d1ecf1;
+      color: #0c5460;
+    }
+    
+    .status-done {
+      background: #d4edda;
+      color: #155724;
+    }
+    
+    .btn {
+      width: 100%;
+      padding: 18px;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 15px;
+      transition: all 0.3s;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn-secondary {
+      background: #f0f0f0;
+      color: #333;
+    }
+    
+    .btn-secondary:hover {
+      background: #e0e0e0;
+    }
+    
+    .feedback-section {
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      padding: 25px;
+      border-radius: 15px;
+      margin-top: 20px;
+    }
+    
+    .feedback-section h3 {
+      margin-bottom: 15px;
+      color: #333;
+      font-size: 18px;
+    }
+    
+    textarea {
+      width: 100%;
+      padding: 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      resize: vertical;
+      font-family: inherit;
+      font-size: 15px;
+      transition: border-color 0.3s;
+    }
+    
+    textarea:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    
+    .image-upload {
+      margin-top: 20px;
+    }
+    
+    .image-preview {
+      display: flex;
+      gap: 12px;
+      margin-top: 12px;
+    }
+    
+    .image-slot {
+      width: 90px;
+      height: 90px;
+      border: 2px dashed #ddd;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      color: #ddd;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .image-slot:hover {
+      border-color: #667eea;
+      color: #667eea;
+      transform: scale(1.05);
+    }
+    
+    .image-slot.uploaded {
+      border-color: #4CAF50;
+      color: #4CAF50;
+      background: #e8f5e9;
+    }
+    
+    .detail-row {
+      padding: 18px 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .detail-row:last-child {
+      border-bottom: none;
+    }
+    
+    .detail-label {
+      font-size: 13px;
+      color: #999;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+    
+    .detail-value {
+      font-size: 16px;
+      color: #333;
+    }
+    
+    .notification {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 18px 35px;
+      border-radius: 12px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+      display: none;
+      z-index: 1000;
+      max-width: 90%;
+      text-align: center;
+    }
+    
+    .notification.show {
+      display: block;
+      animation: slideDown 0.4s ease-out;
+    }
+    
+    @keyframes slideDown {
+      from {
+        transform: translate(-50%, -150%);
+        opacity: 0;
+      }
+      to {
+        transform: translate(-50%, 0);
+        opacity: 1;
+      }
+    }
+    
+    .filter-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      overflow-x: auto;
+      padding-bottom: 5px;
+    }
+    
+    .filter-tab {
+      padding: 10px 18px;
+      border: 2px solid #e0e0e0;
+      border-radius: 25px;
+      background: white;
+      cursor: pointer;
+      white-space: nowrap;
+      font-size: 14px;
+      transition: all 0.3s;
+    }
+    
+    .filter-tab.active {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-color: transparent;
+    }
+    
+    .add-btn {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      width: 65px;
+      height: 65px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      font-size: 32px;
+      box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .add-btn:hover {
+      transform: scale(1.1);
+      box-shadow: 0 12px 35px rgba(102, 126, 234, 0.5);
+    }
+    
+    .feedback-badge {
+      font-size: 13px;
+      color: #667eea;
+      background: #e8eaf6;
+      padding: 8px 12px;
+      border-radius: 8px;
+      margin-top: 8px;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+
+<!-- 通知 -->
+<div class="notification" id="notification"></div>
+
+<!-- 登入頁 -->
+<div class="page active" id="loginPage">
+  <div class="container">
+    <div class="login-box">
+      <h2>🔧 工班管理系統</h2>
+      <p style="text-align: center; color: #666; margin-bottom: 10px;">請選擇身份登入</p>
+      <div class="role-select">
+        <button class="role-btn" onclick="login('manager')">
+          <div class="role-icon">👔</div>
+          <div>統籌</div>
+        </button>
+        <button class="role-btn" onclick="login('master')">
+          <div class="role-icon">🔧</div>
+          <div>師傅</div>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 師傅任務列表 -->
+<div class="page" id="masterTasksPage">
+  <div class="header">
+    <button class="back-btn" onclick="showPage('loginPage')">←</button>
+    <h2>我的任務</h2>
+  </div>
+  <div class="container">
+    <div class="task-card" onclick="showTaskDetail(1)">
+      <div class="task-title">🏠 台北店水電維修</div>
+      <div class="task-meta">
+        <span>📍 台北市中山區</span>
+        <span class="status-badge status-progress">🔄 進行中</span>
+      </div>
+      <div class="task-meta">
+        <span>🕐 2026/3/21 09:00</span>
+      </div>
+    </div>
+    
+    <div class="task-card">
+      <div class="task-title">🏠 高雄店水電檢查</div>
+      <div class="task-meta">
+        <span>📍 高雄市前金區</span>
+        <span class="status-badge status-pending">⏳ 待處理</span>
+      </div>
+      <div class="task-meta">
+        <span>🕐 2026/3/22 10:00</span>
+      </div>
+    </div>
+    
+    <div class="task-card">
+      <div class="task-title">🏠 台中店水管更換</div>
+      <div class="task-meta">
+        <span>📍 台中市西區</span>
+        <span class="status-badge status-done">✅ 已完成</span>
+      </div>
+      <div class="task-meta">
+        <span>🕐 2026/3/20 14:30</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 任務詳情 -->
+<div class="page" id="taskDetailPage">
+  <div class="header">
+    <button class="back-btn" onclick="showPage('masterTasksPage')">←</button>
+    <h2>任務詳情</h2>
+  </div>
+  <div class="container">
+    <div class="detail-row">
+      <div class="detail-label">任務標題</div>
+      <div class="detail-value">🏠 台北店水電維修</div>
+    </div>
+    
+    <div class="detail-row">
+      <div class="detail-label">地點</div>
+      <div class="detail-value">📍 台北市中山區復興北路123號</div>
+    </div>
+    
+    <div class="detail-row">
+      <div class="detail-label">狀態</div>
+      <div class="detail-value"><span class="status-badge status-progress">🔄 進行中</span></div>
+    </div>
+    
+    <div class="detail-row">
+      <div class="detail-label">任務說明</div>
+      <div class="detail-value">冷氣不冷，需要檢查電路和冷媒。</div>
+    </div>
+    
+    <div class="feedback-section">
+      <h3>📝 任務回饋</h3>
+      <textarea id="feedbackText" rows="5" placeholder="請輸入回饋內容，例如：已檢查完畢，發現電路老舊需要更換..."></textarea>
+      
+      <div class="image-upload">
+        <div class="detail-label">📷 上傳照片（最多3張）</div>
+        <div class="image-preview">
+          <div class="image-slot" id="img1" onclick="uploadImage(1)">+</div>
+          <div class="image-slot" id="img2" onclick="uploadImage(2)">+</div>
+          <div class="image-slot" id="img3" onclick="uploadImage(3)">+</div>
+        </div>
+      </div>
+      
+      <button class="btn btn-secondary" onclick="submitFeedback()">💬 提交回饋</button>
+    </div>
+    
+    <button class="btn btn-primary" onclick="completeTask()">✅ 標記完成</button>
+  </div>
+</div>
+
+<!-- 統籌管理頁 -->
+<div class="page" id="managerPage">
+  <div class="header">
+    <button class="back-btn" onclick="showPage('loginPage')">←</button>
+    <h2>任務管理</h2>
+  </div>
+  <div class="container">
+    <div class="filter-tabs">
+      <button class="filter-tab active">全部</button>
+      <button class="filter-tab">壁紙</button>
+      <button class="filter-tab">水電</button>
+      <button class="filter-tab">木工</button>
+      <button class="filter-tab">隔間</button>
+    </div>
+    
+    <div class="task-card">
+      <div class="task-title">🏠 台北店水電維修</div>
+      <div class="task-meta">
+        <span>李師傅 | 📍 台北中山</span>
+        <span class="status-badge status-progress">🔄 進行中</span>
+      </div>
+      <div class="feedback-badge">
+        💬 有新回饋：電路檢修完成，測試正常
+      </div>
+    </div>
+    
+    <div class="task-card">
+      <div class="task-title">🏠 高雄店木工裝潢</div>
+      <div class="task-meta">
+        <span>陳師傅 | 📍 高雄前金</span>
+        <span class="status-badge status-pending">⏳ 待處理</span>
+      </div>
+    </div>
+    
+    <div class="task-card">
+      <div class="task-title">🏠 台中店壁紙更換</div>
+      <div class="task-meta">
+        <span>王師傅 | 📍 台中西區</span>
+        <span class="status-badge status-done">✅ 已完成</span>
+      </div>
+      <div class="feedback-badge">
+        💬 順利完成，客戶很滿意 | 📷 3 張照片
+      </div>
+    </div>
+  </div>
+  
+  <button class="add-btn" onclick="showNotification('新增任務功能將在正式版中開啟 🚀')">+</button>
+</div>
+
+<script>
+let uploadedImages = 0;
+
+function showPage(pageId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(pageId).classList.add('active');
+}
+
+function login(role) {
+  if (role === 'manager') {
+    showPage('managerPage');
+  } else {
+    showPage('masterTasksPage');
+  }
+}
+
+function showTaskDetail(taskId) {
+  showPage('taskDetailPage');
+}
+
+function uploadImage(slot) {
+  const imgSlot = document.getElementById('img' + slot);
+  if (!imgSlot.classList.contains('uploaded')) {
+    imgSlot.classList.add('uploaded');
+    imgSlot.textContent = '✓';
+    uploadedImages++;
+    showNotification(`已上傳照片 ${slot}/3`);
+  }
+}
+
+function submitFeedback() {
+  const text = document.getElementById('feedbackText').value;
+  if (!text) {
+    alert('請輸入回饋內容');
+    return;
+  }
+  
+  // 模擬發送通知
+  showNotification('💬 回饋已提交！統籌已收到 LINE 通知 🔔');
+  document.getElementById('feedbackText').value = '';
+}
+
+function completeTask() {
+  if (confirm('確定要標記此任務為完成嗎？')) {
+    // 模擬發送完成通知
+    showNotification('🎉 任務已完成！統籌已收到 LINE 通知 🔔');
+    setTimeout(() => {
+      showPage('masterTasksPage');
+    }, 2000);
+  }
+}
+
+function showNotification(message) {
+  const notif = document.getElementById('notification');
+  notif.textContent = message;
+  notif.classList.add('show');
+  setTimeout(() => {
+    notif.classList.remove('show');
+  }, 3000);
+}
+</script>
+
+</body>
+</html>
