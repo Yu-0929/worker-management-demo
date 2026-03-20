@@ -411,11 +411,38 @@
   </div>
 </div>
 
+<!-- 師傅選擇頁 -->
+<div class="page" id="masterSelectPage">
+  <div class="header">
+    <button class="back-btn" onclick="showPage('loginPage')">←</button>
+    <h2>選擇師傅</h2>
+  </div>
+  <div class="container">
+    <p style="text-align: center; color: #666; margin-bottom: 20px; font-size: 16px;">請選擇您的身份</p>
+    <div class="task-card" onclick="selectMaster('王師傅', '壁紙')">
+      <div class="task-title" style="text-align: center;">🎨 王師傅</div>
+      <div style="text-align: center; color: #999; margin-top: 8px;">專長：壁紙</div>
+    </div>
+    <div class="task-card" onclick="selectMaster('李師傅', '水電')">
+      <div class="task-title" style="text-align: center;">⚡ 李師傅</div>
+      <div style="text-align: center; color: #999; margin-top: 8px;">專長：水電</div>
+    </div>
+    <div class="task-card" onclick="selectMaster('陳師傅', '木工')">
+      <div class="task-title" style="text-align: center;">🪵 陳師傅</div>
+      <div style="text-align: center; color: #999; margin-top: 8px;">專長：木工</div>
+    </div>
+    <div class="task-card" onclick="selectMaster('林師傅', '隔間')">
+      <div class="task-title" style="text-align: center;">🧱 林師傅</div>
+      <div style="text-align: center; color: #999; margin-top: 8px;">專長：隔間</div>
+    </div>
+  </div>
+</div>
+
 <!-- 師傅任務列表 -->
 <div class="page" id="masterTasksPage">
   <div class="header">
-    <button class="back-btn" onclick="showPage('loginPage')">←</button>
-    <h2>我的任務</h2>
+    <button class="back-btn" onclick="showPage('masterSelectPage')">←</button>
+    <h2 id="masterName">我的任務</h2>
   </div>
   <div class="container">
     <div class="task-card" onclick="showTaskDetail(1)">
@@ -551,6 +578,8 @@
 
 <script>
 let uploadedImages = 0;
+let currentMaster = '';
+let currentSkill = '';
 
 function showPage(pageId) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -561,8 +590,16 @@ function login(role) {
   if (role === 'manager') {
     showPage('managerPage');
   } else {
-    showPage('masterTasksPage');
+    showPage('masterSelectPage');
   }
+}
+
+function selectMaster(name, skill) {
+  currentMaster = name;
+  currentSkill = skill;
+  document.getElementById('masterName').textContent = name + ' 的任務';
+  showPage('masterTasksPage');
+  showNotification(`歡迎回來，${name}！`);
 }
 
 function showTaskDetail(taskId) {
