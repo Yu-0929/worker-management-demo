@@ -101,21 +101,27 @@
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
         
-        .task-card {
+        .site-card, .task-card {
             background: #f8f9fa;
             border-radius: 10px;
             padding: 15px;
             margin-bottom: 15px;
             border-left: 4px solid #667eea;
+            cursor: pointer;
+            transition: transform 0.2s;
         }
         
-        .task-card h3 {
+        .site-card:active, .task-card:active {
+            transform: scale(0.98);
+        }
+        
+        .site-card h3, .task-card h3 {
             color: #333;
             font-size: 16px;
             margin-bottom: 8px;
         }
         
-        .task-info {
+        .site-info, .task-info {
             color: #666;
             font-size: 14px;
             margin-bottom: 5px;
@@ -200,6 +206,14 @@
             border-radius: 8px;
             margin-bottom: 15px;
         }
+        
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
     </style>
 </head>
 <body>
@@ -240,6 +254,7 @@
         
         let currentRole = '';
         let currentMaster = '';
+        let allSites = [];
         
         // 選擇角色
         function selectRole(role) {
@@ -270,46 +285,123 @@
                 <div class="loading">載入中...</div>
             `;
             
-            try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: 'getMasterTasks',
-                        masterName: currentMaster
-                    })
-                });
-                
-                // 由於 no-cors 模式無法讀取回應，我們先顯示提示
-                content.innerHTML = `
-                    <h2>📋 ${currentMaster}的任務</h2>
-                    <p style="text-align: center; color: #666; padding: 30px;">
-                        目前沒有任務<br><br>
-                        <small>（如果有任務但沒顯示，請聯絡管理員）</small>
-                    </p>
-                    <button class="btn btn-secondary" onclick="backToRoleSelect()">返回</button>
-                `;
-                
-            } catch (error) {
-                content.innerHTML = `
-                    <h2>錯誤</h2>
-                    <div class="error">載入失敗：${error.message}</div>
-                    <button class="btn btn-secondary" onclick="backToRoleSelect()">返回</button>
-                `;
-            }
+            content.innerHTML = `
+                <h2>📋 ${currentMaster}的任務</h2>
+                <p style="text-align: center; color: #666; padding: 30px;">
+                    目前沒有任務<br><br>
+                    <small>（如果有任務但沒顯示，請聯絡管理員）</small>
+                </p>
+                <button class="btn btn-secondary" onclick="backToRoleSelect()">返回</button>
+            `;
         }
         
         // 載入統籌介面
         function loadManagerView() {
             const content = document.getElementById('content');
             content.innerHTML = `
-                <h2>📝 新增任務</h2>
+                <h2>📊 統籌管理</h2>
+                <button class="btn" onclick="showCreateSite()">🏗️ 建立案場</button>
+                <button class="btn" onclick="showSiteList()">📋 查看案場列表</button>
+                <button class="btn btn-secondary" onclick="backToRoleSelect()">返回</button>
+            `;
+        }
+        
+        // 顯示建立案場表單
+        function showCreateSite() {
+            const content = document.getElementById('content');
+            content.innerHTML = `
+                <h2>🏗️ 建立案場</h2>
+                <div class="form-group">
+                    <label>案場名稱 *</label>
+                    <input type="text" id="siteName" placeholder="例如：台北店裝潢工程">
+                </div>
+                <div class="form-group">
+                    <label>地點 *</label>
+                    <input type="text" id="siteLocation" placeholder="例如：台北市中山區">
+                </div>
+                <div class="form-group">
+                    <label>備註</label>
+                    <textarea id="siteNote" placeholder="選填"></textarea>
+                </div>
+                <button class="btn" onclick="createSite()">建立案場</button>
+                <button class="btn btn-secondary" onclick="loadManagerView()">返回</button>
+            `;
+        }
+        
+        // 建立案場
+        async function createSite() {
+            const name = document.getElementById('siteName').value.trim();
+            const location = document.getElementById('siteLocation').value.trim();
+            const note = document.getElementById('siteNote').value.trim();
+            
+            if (!name || !location) {
+                alert('請填寫案場名稱和地點！');
+                return;
+            }
+            
+            try {
+                await fetch(API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'createSite',
+                        siteData: {
+                            name: name,
+                            location: location,
+                            note: note
+                        }
+                    })
+                });
+                
+                alert('案場已建立！\n\n請到 Google Sheets 確認。');
+                loadManagerView();
+                
+            } catch (error) {
+                alert('發生錯誤：' + error.message);
+            }
+        }
+        
+        // 顯示案場列表
+        async function showSiteList() {
+            const content = document.getElementById('content');
+            content.innerHTML = `
+                <h2>📋 案場列表</h2>
+                <div class="loading">載入中...</div>
+            `;
+            
+            // 由於 CORS 限制，顯示提示訊息並提供手動操作選項
+            content.innerHTML = `
+                <h2>📋 案場列表</h2>
+                <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 15px; color: #856404;">
+                    <p style="margin-bottom: 10px;"><strong>📌 提示：</strong></p>
+                    <p>由於瀏覽器安全限制，請直接到 Google Sheets「案場列表」工作表查看所有案場。</p>
+                </div>
+                <button class="btn" onclick="showCreateTaskFromSiteList()">➕ 新增任務</button>
+                <button class="btn btn-secondary" onclick="loadManagerView()">返回</button>
+            `;
+        }
+        
+        // 從案場列表進入新增任務
+        function showCreateTaskFromSiteList() {
+            showCreateTask();
+        }
+        
+        // 顯示新增任務表單
+        function showCreateTask() {
+            const content = document.getElementById('content');
+            content.innerHTML = `
+                <h2>➕ 新增任務</h2>
+                <div class="form-group">
+                    <label>案場編號 *</label>
+                    <input type="text" id="taskSiteId" placeholder="例如：SITE-001">
+                    <small style="color: #666;">請先到 Google Sheets 查看案場編號</small>
+                </div>
                 <div class="form-group">
                     <label>任務標題 *</label>
-                    <input type="text" id="taskTitle" placeholder="例如：台北店水電維修">
+                    <input type="text" id="taskTitle" placeholder="例如：壁紙施工">
                 </div>
                 <div class="form-group">
                     <label>地點 *</label>
@@ -338,25 +430,26 @@
                     <textarea id="taskDescription" placeholder="請輸入詳細說明..."></textarea>
                 </div>
                 <button class="btn" onclick="createTask()">新增任務</button>
-                <button class="btn btn-secondary" onclick="backToRoleSelect()">返回</button>
+                <button class="btn btn-secondary" onclick="loadManagerView()">返回</button>
             `;
         }
         
         // 新增任務
         async function createTask() {
+            const siteId = document.getElementById('taskSiteId').value.trim();
             const title = document.getElementById('taskTitle').value.trim();
             const location = document.getElementById('taskLocation').value.trim();
             const skill = document.getElementById('taskSkill').value;
             const masterName = document.getElementById('taskMaster').value;
             const description = document.getElementById('taskDescription').value.trim();
             
-            if (!title || !location || !description) {
+            if (!siteId || !title || !location || !description) {
                 alert('請填寫所有必填欄位！');
                 return;
             }
             
             try {
-                const response = await fetch(API_URL, {
+                await fetch(API_URL, {
                     method: 'POST',
                     mode: 'no-cors',
                     headers: {
@@ -365,6 +458,7 @@
                     body: JSON.stringify({
                         action: 'createTask',
                         taskData: {
+                            siteId: siteId,
                             title: title,
                             location: location,
                             skill: skill,
@@ -374,88 +468,13 @@
                     })
                 });
                 
-                // 由於 no-cors 模式無法讀取回應，我們假設成功
-                alert('任務已提交！\n\n請到 Google Sheets 確認是否新增成功。');
+                alert('任務已新增！\n\n請到 Google Sheets 確認。');
                 
                 // 清空表單
+                document.getElementById('taskSiteId').value = '';
                 document.getElementById('taskTitle').value = '';
                 document.getElementById('taskLocation').value = '';
                 document.getElementById('taskDescription').value = '';
-                
-            } catch (error) {
-                alert('發生錯誤：' + error.message + '\n\n請稍後再試或聯絡管理員。');
-            }
-        }
-        
-        // 顯示回饋表單
-        function showFeedbackForm(taskId) {
-            const content = document.getElementById('content');
-            content.innerHTML = `
-                <h2>💬 提交回饋</h2>
-                <div class="form-group">
-                    <label>回饋內容 *</label>
-                    <textarea id="feedbackText" placeholder="請輸入工作回饋..."></textarea>
-                </div>
-                <button class="btn" onclick="submitFeedback('${taskId}')">提交</button>
-                <button class="btn btn-secondary" onclick="loadMasterView()">返回</button>
-            `;
-        }
-        
-        // 提交回饋
-        async function submitFeedback(taskId) {
-            const feedbackText = document.getElementById('feedbackText').value.trim();
-            
-            if (!feedbackText) {
-                alert('請輸入回饋內容！');
-                return;
-            }
-            
-            try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: 'submitFeedback',
-                        taskId: taskId,
-                        masterName: currentMaster,
-                        feedbackText: feedbackText,
-                        imageUrls: []
-                    })
-                });
-                
-                alert('回饋已提交！');
-                loadMasterView();
-                
-            } catch (error) {
-                alert('發生錯誤：' + error.message);
-            }
-        }
-        
-        // 標記完成
-        async function markComplete(taskId) {
-            if (!confirm('確定要標記此任務為已完成嗎？')) {
-                return;
-            }
-            
-            try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: 'completeTask',
-                        taskId: taskId,
-                        masterName: currentMaster
-                    })
-                });
-                
-                alert('任務已標記為完成！');
-                loadMasterView();
                 
             } catch (error) {
                 alert('發生錯誤：' + error.message);
