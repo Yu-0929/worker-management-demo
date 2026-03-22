@@ -111,7 +111,7 @@
             transition: transform 0.2s;
         }
         
-        .site-card:active, .task-card:active {
+        .site-card:active {
             transform: scale(0.98);
         }
         
@@ -206,14 +206,6 @@
             border-radius: 8px;
             margin-bottom: 15px;
         }
-        
-        .success {
-            background: #d4edda;
-            color: #155724;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-        }
     </style>
 </head>
 <body>
@@ -255,6 +247,21 @@
         let currentRole = '';
         let currentMaster = '';
         let allSites = [];
+        let selectedSite = null;
+        
+        // JSONP 請求函數
+        function jsonp(url, callback) {
+            const callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
+            window[callbackName] = function(data) {
+                delete window[callbackName];
+                document.body.removeChild(script);
+                callback(data);
+            };
+            
+            const script = document.createElement('script');
+            script.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'callback=' + callbackName;
+            document.body.appendChild(script);
+        }
         
         // 選擇角色
         function selectRole(role) {
@@ -278,13 +285,8 @@
         }
         
         // 載入師傅介面
-        async function loadMasterView() {
+        function loadMasterView() {
             const content = document.getElementById('content');
-            content.innerHTML = `
-                <h2>📋 ${currentMaster}的任務</h2>
-                <div class="loading">載入中...</div>
-            `;
-            
             content.innerHTML = `
                 <h2>📋 ${currentMaster}的任務</h2>
                 <p style="text-align: center; color: #666; padding: 30px;">
@@ -356,7 +358,7 @@
                     })
                 });
                 
-                alert('案場已建立！\n\n請到 Google Sheets 確認。');
+                alert('案場已建立！');
                 loadManagerView();
                 
             } catch (error) {
@@ -364,40 +366,132 @@
             }
         }
         
-        // 顯示案場列表
-        async function showSiteList() {
+        // 顯示案場列表（使用 JSONP）
+        function showSiteList() {
             const content = document.getElementById('content');
             content.innerHTML = `
                 <h2>📋 案場列表</h2>
                 <div class="loading">載入中...</div>
             `;
             
-            // 由於 CORS 限制，顯示提示訊息並提供手動操作選項
-            content.innerHTML = `
-                <h2>📋 案場列表</h2>
-                <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 15px; color: #856404;">
-                    <p style="margin-bottom: 10px;"><strong>📌 提示：</strong></p>
-                    <p>由於瀏覽器安全限制，請直接到 Google Sheets「案場列表」工作表查看所有案場。</p>
-                </div>
-                <button class="btn" onclick="showCreateTaskFromSiteList()">➕ 新增任務</button>
+            // 使用 JSONP 取得案場列表
+            jsonp(API_URL + '?action=getSites', function(result) {
+                if (result.success && result.sites) {
+                    allSites = result.sites;
+                    renderSiteList(result.sites);
+                } else {
+                    content.innerHTML = `
+                        <h2>📋 案場列表</h2>
+                        <div class="error">載入失敗：${result.error || '未知錯誤'}</div>
+                        <button class="btn btn-secondary" onclick="loadManagerView()">返回</button>
+                    `;
+                }
+            });
+        }
+        
+        // 渲染案場列表
+        function renderSiteList(sites) {
+            const content = document.getElementById('content');
+            
+            if (sites.length === 0) {
+                content.innerHTML = `
+                    <h2>📋 案場列表</h2>
+                    <p style="text-align: center; color: #666; padding: 30px;">
+                        目前沒有案場<br><br>
+                        請先建立案場
+                    </p>
+                    <button class="btn" onclick="showCreateSite()">🏗️ 建立案場</button>
+                    <button class="btn btn-secondary" onclick="loadManagerView()">返回</button>
+                `;
+                return;
+            }
+            
+            let html = '<h2>📋 案場列表</h2>';
+            
+            sites.forEach(site => {
+                html += `
+                    <div class="site-card" onclick="showSiteTasks('${site.id}', '${site.name}')">
+                        <h3>${site.name}</h3>
+                        <div class="site-info">📍 ${site.location}</div>
+                        <div class="site-info">🆔 ${site.id}</div>
+                        <div class="site-info">📅 ${formatDate(site.createTime)}</div>
+                    </div>
+                `;
+            });
+            
+            html += `
+                <button class="btn" onclick="showCreateTaskWithSiteSelect()">➕ 新增任務</button>
                 <button class="btn btn-secondary" onclick="loadManagerView()">返回</button>
             `;
+            
+            content.innerHTML = html;
         }
         
-        // 從案場列表進入新增任務
-        function showCreateTaskFromSiteList() {
-            showCreateTask();
-        }
-        
-        // 顯示新增任務表單
-        function showCreateTask() {
+        // 顯示案場任務
+        function showSiteTasks(siteId, siteName) {
             const content = document.getElementById('content');
             content.innerHTML = `
-                <h2>➕ 新增任務</h2>
+                <h2>📋 ${siteName} - 任務列表</h2>
+                <div class="loading">載入中...</div>
+            `;
+            
+            // 使用 JSONP 取得案場任務
+            jsonp(API_URL + '?action=getSiteTasks&siteId=' + siteId, function(result) {
+                if (result.success && result.tasks) {
+                    renderSiteTasks(result.tasks, siteId, siteName);
+                } else {
+                    content.innerHTML = `
+                        <h2>📋 ${siteName} - 任務列表</h2>
+                        <div class="error">載入失敗：${result.error || '未知錯誤'}</div>
+                        <button class="btn btn-secondary" onclick="showSiteList()">返回</button>
+                    `;
+                }
+            });
+        }
+        
+        // 渲染案場任務
+        function renderSiteTasks(tasks, siteId, siteName) {
+            const content = document.getElementById('content');
+            
+            let html = `<h2>📋 ${siteName} - 任務列表</h2>`;
+            
+            if (tasks.length === 0) {
+                html += `
+                    <p style="text-align: center; color: #666; padding: 30px;">
+                        此案場目前沒有任務
+                    </p>
+                `;
+            } else {
+                tasks.forEach(task => {
+                    const statusClass = task.status === '已完成' ? 'status-completed' : 'status-pending';
+                    html += `
+                        <div class="task-card">
+                            <h3>${task.title}</h3>
+                            <div class="task-info">📍 ${task.location}</div>
+                            <div class="task-info">🔧 ${task.skill} | 👷 ${task.masterName}</div>
+                            <div class="task-info">📝 ${task.description}</div>
+                            <span class="task-status ${statusClass}">${task.status}</span>
+                        </div>
+                    `;
+                });
+            }
+            
+            html += `
+                <button class="btn" onclick="showCreateTaskForSite('${siteId}', '${siteName}')">➕ 新增任務到此案場</button>
+                <button class="btn btn-secondary" onclick="showSiteList()">返回案場列表</button>
+            `;
+            
+            content.innerHTML = html;
+        }
+        
+        // 新增任務到指定案場
+        function showCreateTaskForSite(siteId, siteName) {
+            const content = document.getElementById('content');
+            content.innerHTML = `
+                <h2>➕ 新增任務到 ${siteName}</h2>
                 <div class="form-group">
-                    <label>案場編號 *</label>
-                    <input type="text" id="taskSiteId" placeholder="例如：SITE-001">
-                    <small style="color: #666;">請先到 Google Sheets 查看案場編號</small>
+                    <label>案場編號</label>
+                    <input type="text" id="taskSiteId" value="${siteId}" readonly style="background: #f0f0f0;">
                 </div>
                 <div class="form-group">
                     <label>任務標題 *</label>
@@ -430,7 +524,59 @@
                     <textarea id="taskDescription" placeholder="請輸入詳細說明..."></textarea>
                 </div>
                 <button class="btn" onclick="createTask()">新增任務</button>
-                <button class="btn btn-secondary" onclick="loadManagerView()">返回</button>
+                <button class="btn btn-secondary" onclick="showSiteTasks('${siteId}', '${siteName}')">返回</button>
+            `;
+        }
+        
+        // 從案場列表選擇案場新增任務
+        function showCreateTaskWithSiteSelect() {
+            const content = document.getElementById('content');
+            
+            let options = '';
+            allSites.forEach(site => {
+                options += `<option value="${site.id}">${site.name} (${site.id})</option>`;
+            });
+            
+            content.innerHTML = `
+                <h2>➕ 新增任務</h2>
+                <div class="form-group">
+                    <label>選擇案場 *</label>
+                    <select id="taskSiteId">
+                        ${options}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>任務標題 *</label>
+                    <input type="text" id="taskTitle" placeholder="例如：壁紙施工">
+                </div>
+                <div class="form-group">
+                    <label>地點 *</label>
+                    <input type="text" id="taskLocation" placeholder="例如：台北市中山區">
+                </div>
+                <div class="form-group">
+                    <label>工種</label>
+                    <select id="taskSkill">
+                        <option value="壁紙">壁紙</option>
+                        <option value="水電">水電</option>
+                        <option value="木工">木工</option>
+                        <option value="隔間">隔間</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>指派師傅</label>
+                    <select id="taskMaster">
+                        <option value="何">何</option>
+                        <option value="盧">盧</option>
+                        <option value="大根">大根</option>
+                        <option value="書名">書名</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>任務說明 *</label>
+                    <textarea id="taskDescription" placeholder="請輸入詳細說明..."></textarea>
+                </div>
+                <button class="btn" onclick="createTask()">新增任務</button>
+                <button class="btn btn-secondary" onclick="showSiteList()">返回</button>
             `;
         }
         
@@ -468,17 +614,19 @@
                     })
                 });
                 
-                alert('任務已新增！\n\n請到 Google Sheets 確認。');
-                
-                // 清空表單
-                document.getElementById('taskSiteId').value = '';
-                document.getElementById('taskTitle').value = '';
-                document.getElementById('taskLocation').value = '';
-                document.getElementById('taskDescription').value = '';
+                alert('任務已新增！');
+                showSiteList();
                 
             } catch (error) {
                 alert('發生錯誤：' + error.message);
             }
+        }
+        
+        // 格式化日期
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('zh-TW');
         }
         
         // 返回角色選擇
