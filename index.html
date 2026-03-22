@@ -529,20 +529,10 @@
             }
             
             try {
-                const requestData = {
-                    action: 'submitFeedback',
-                    taskId: taskId,
-                    masterName: currentMaster,
-                    feedbackText: feedbackText,
-                    imageUrls: []
-                };
-                
-                await fetch(API_URL + '?action=' + requestData.action + 
+                await fetch(API_URL + '?action=submitFeedback' + 
                            '&taskId=' + encodeURIComponent(taskId) +
                            '&masterName=' + encodeURIComponent(currentMaster) +
-                           '&feedbackText=' + encodeURIComponent(feedbackText), {
-                    method: 'GET'
-                });
+                           '&feedbackText=' + encodeURIComponent(feedbackText));
                 
                 alert('回饋已提交！統籌已收到通知。');
                 loadMasterView();
