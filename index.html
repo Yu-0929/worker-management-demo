@@ -435,6 +435,12 @@
         
         // 顯示預估完成時間表單
         function showEstimatedTimeForm() {
+            if (!currentTask || !currentTask.id) {
+                alert('錯誤：無法取得任務資訊！');
+                loadMasterView();
+                return;
+            }
+            
             const content = document.getElementById('content');
             content.innerHTML = `
                 <h2>⏰ 提交預估完成時間</h2>
@@ -445,6 +451,7 @@
                     <label>預估完成日期 *</label>
                     <input type="date" id="estimatedDate">
                 </div>
+                <input type="hidden" id="hiddenTaskId" value="${currentTask.id}">
                 <button class="btn" onclick="submitEstimatedTime()">提交</button>
                 <button class="btn btn-secondary" onclick="showTaskDetail(currentTask)">返回</button>
             `;
@@ -453,9 +460,15 @@
         // 提交預估完成時間
         async function submitEstimatedTime() {
             const estimatedDate = document.getElementById('estimatedDate').value;
+            const taskId = document.getElementById('hiddenTaskId').value;
             
             if (!estimatedDate) {
                 alert('請選擇預估完成日期！');
+                return;
+            }
+            
+            if (!taskId) {
+                alert('錯誤：無法取得任務編號！');
                 return;
             }
             
@@ -468,15 +481,14 @@
                     },
                     body: JSON.stringify({
                         action: 'submitEstimatedTime',
-                        taskId: currentTask.id,
+                        taskId: taskId,
                         masterName: currentMaster,
                         estimatedTime: estimatedDate
                     })
                 });
                 
                 alert('預估完成時間已提交！\n\n統籌已收到通知。');
-                currentTask.estimatedTime = estimatedDate;
-                showTaskDetail(currentTask);
+                loadMasterView();
                 
             } catch (error) {
                 alert('發生錯誤：' + error.message);
@@ -485,6 +497,12 @@
         
         // 顯示回饋表單
         function showFeedbackForm() {
+            if (!currentTask || !currentTask.id) {
+                alert('錯誤：無法取得任務資訊！');
+                loadMasterView();
+                return;
+            }
+            
             const content = document.getElementById('content');
             content.innerHTML = `
                 <h2>💬 提交回饋</h2>
@@ -495,6 +513,8 @@
                     <label>回饋內容 *</label>
                     <textarea id="feedbackText" placeholder="請輸入工作回饋..."></textarea>
                 </div>
+                <input type="hidden" id="hiddenTaskId" value="${currentTask.id}">
+                <input type="hidden" id="hiddenTaskTitle" value="${currentTask.title}">
                 <button class="btn" onclick="submitFeedback()">提交</button>
                 <button class="btn btn-secondary" onclick="showTaskDetail(currentTask)">返回</button>
             `;
@@ -503,31 +523,26 @@
         // 提交回饋
         async function submitFeedback() {
             const feedbackText = document.getElementById('feedbackText').value.trim();
+            const taskId = document.getElementById('hiddenTaskId').value;
             
             if (!feedbackText) {
                 alert('請輸入回饋內容！');
                 return;
             }
             
-            // 调试：确认数据
-            console.log('currentTask:', currentTask);
-            console.log('taskId:', currentTask ? currentTask.id : 'undefined');
-            
-            if (!currentTask || !currentTask.id) {
-                alert('錯誤：無法取得任務編號！請返回重新選擇任務。');
+            if (!taskId) {
+                alert('錯誤：無法取得任務編號！');
                 return;
             }
             
             try {
                 const requestData = {
                     action: 'submitFeedback',
-                    taskId: currentTask.id,
+                    taskId: taskId,
                     masterName: currentMaster,
                     feedbackText: feedbackText,
                     imageUrls: []
                 };
-                
-                console.log('發送數據：', requestData);
                 
                 await fetch(API_URL, {
                     method: 'POST',
@@ -538,8 +553,8 @@
                     body: JSON.stringify(requestData)
                 });
                 
-                alert('回饋已提交！');
-                showTaskDetail(currentTask);
+                alert('回饋已提交！統籌已收到通知。');
+                loadMasterView();
                 
             } catch (error) {
                 alert('發生錯誤：' + error.message);
@@ -555,6 +570,11 @@
         
         // 完成任務
         async function completeTask() {
+            if (!currentTask || !currentTask.id) {
+                alert('錯誤：無法取得任務編號！');
+                return;
+            }
+            
             try {
                 await fetch(API_URL, {
                     method: 'POST',
@@ -569,7 +589,7 @@
                     })
                 });
                 
-                alert('任務已標記為完成！');
+                alert('任務已標記為完成！\n\n統籌已收到通知。');
                 loadMasterView();
                 
             } catch (error) {
