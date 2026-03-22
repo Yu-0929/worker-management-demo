@@ -1,695 +1,486 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>工班管理系統 - 模擬版</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      max-width: 500px;
-      margin: 0 auto;
-      min-height: 100vh;
-    }
-    
-    .page {
-      display: none;
-      min-height: 100vh;
-      background: white;
-    }
-    
-    .page.active {
-      display: block;
-    }
-    
-    .header {
-      background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
-      color: white;
-      padding: 20px;
-      text-align: center;
-      position: relative;
-      box-shadow: 0 4px 15px rgba(255,107,107,0.4);
-    }
-    
-    .back-btn {
-      position: absolute;
-      left: 15px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: rgba(255,255,255,0.2);
-      border: none;
-      color: white;
-      font-size: 20px;
-      cursor: pointer;
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    
-    .back-btn:hover {
-      background: rgba(255,255,255,0.3);
-    }
-    
-    .container {
-      padding: 20px;
-    }
-    
-    .login-box {
-      background: white;
-      padding: 40px 30px;
-      border-radius: 20px;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-      margin-top: 80px;
-    }
-    
-    .login-box h2 {
-      text-align: center;
-      margin-bottom: 30px;
-      background: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      font-size: 28px;
-    }
-    
-    .role-select {
-      display: flex;
-      gap: 15px;
-      margin-top: 30px;
-    }
-    
-    .role-btn {
-      flex: 1;
-      padding: 30px 20px;
-      border: 2px solid #e0e0e0;
-      border-radius: 15px;
-      background: white;
-      cursor: pointer;
-      transition: all 0.3s;
-      font-size: 16px;
-    }
-    
-    .role-btn:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 10px 30px rgba(255, 107, 107, 0.4);
-      border-color: #FF6B6B;
-      background: linear-gradient(135deg, #FFE66D 0%, #FF6B6B 100%);
-      color: white;
-    }
-    
-    .role-icon {
-      font-size: 48px;
-      margin-bottom: 15px;
-    }
-    
-    .task-card {
-      background: white;
-      padding: 20px;
-      border-radius: 15px;
-      margin-bottom: 15px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-      cursor: pointer;
-      transition: all 0.3s;
-      border: 2px solid transparent;
-    }
-    
-    .task-card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 8px 25px rgba(78,205,196,0.3);
-      border-color: #4ECDC4;
-      background: linear-gradient(135deg, #ffffff 0%, #F7FFF7 100%);
-    }
-    
-    .task-title {
-      font-size: 18px;
-      font-weight: bold;
-      margin-bottom: 12px;
-      color: #333;
-    }
-    
-    .task-meta {
-      display: flex;
-      justify-content: space-between;
-      font-size: 14px;
-      color: #666;
-      margin-bottom: 8px;
-    }
-    
-    .status-badge {
-      padding: 5px 15px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: bold;
-    }
-    
-    .status-pending {
-      background: linear-gradient(135deg, #FFE66D 0%, #FFAB73 100%);
-      color: #8B4513;
-      font-weight: bold;
-    }
-    
-    .status-progress {
-      background: linear-gradient(135deg, #74EBD5 0%, #9FACE6 100%);
-      color: #1a5490;
-      font-weight: bold;
-    }
-    
-    .status-done {
-      background: linear-gradient(135deg, #56CCF2 0%, #2F80ED 100%);
-      color: white;
-      font-weight: bold;
-    }
-    
-    .btn {
-      width: 100%;
-      padding: 18px;
-      border: none;
-      border-radius: 12px;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-      margin-top: 15px;
-      transition: all 0.3s;
-    }
-    
-    .btn-primary {
-      background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
-      color: white;
-    }
-    
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(255, 107, 107, 0.5);
-      background: linear-gradient(135deg, #FF8E53 0%, #FF6B6B 100%);
-    }
-    
-    .btn-secondary {
-      background: linear-gradient(135deg, #4ECDC4 0%, #44A08D 100%);
-      color: white;
-    }
-    
-    .btn-secondary:hover {
-      background: linear-gradient(135deg, #44A08D 0%, #4ECDC4 100%);
-      transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(78, 205, 196, 0.4);
-    }
-    
-    .feedback-section {
-      background: linear-gradient(135deg, #FFE66D 0%, #FFF8DC 100%);
-      padding: 25px;
-      border-radius: 15px;
-      margin-top: 20px;
-      border: 2px solid #FFD93D;
-    }
-    
-    .feedback-section h3 {
-      margin-bottom: 15px;
-      color: #333;
-      font-size: 18px;
-    }
-    
-    textarea {
-      width: 100%;
-      padding: 15px;
-      border: 2px solid #e0e0e0;
-      border-radius: 10px;
-      resize: vertical;
-      font-family: inherit;
-      font-size: 15px;
-      transition: border-color 0.3s;
-    }
-    
-    textarea:focus {
-      outline: none;
-      border-color: #667eea;
-    }
-    
-    .image-upload {
-      margin-top: 20px;
-    }
-    
-    .image-preview {
-      display: flex;
-      gap: 12px;
-      margin-top: 12px;
-    }
-    
-    .image-slot {
-      width: 90px;
-      height: 90px;
-      border: 2px dashed #ddd;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 36px;
-      color: #ddd;
-      cursor: pointer;
-      transition: all 0.3s;
-    }
-    
-    .image-slot:hover {
-      border-color: #FF6B6B;
-      color: #FF6B6B;
-      transform: scale(1.05);
-      background: #FFF0F0;
-    }
-    
-    .image-slot.uploaded {
-      border-color: #4ECDC4;
-      color: white;
-      background: linear-gradient(135deg, #4ECDC4 0%, #44A08D 100%);
-      font-size: 28px;
-    }
-    
-    .detail-row {
-      padding: 18px 0;
-      border-bottom: 1px solid #f0f0f0;
-    }
-    
-    .detail-row:last-child {
-      border-bottom: none;
-    }
-    
-    .detail-label {
-      font-size: 13px;
-      color: #999;
-      margin-bottom: 8px;
-      font-weight: 500;
-    }
-    
-    .detail-value {
-      font-size: 16px;
-      color: #333;
-    }
-    
-    .notification {
-      position: fixed;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: linear-gradient(135deg, #56CCF2 0%, #2F80ED 100%);
-      color: white;
-      padding: 18px 35px;
-      border-radius: 12px;
-      box-shadow: 0 8px 30px rgba(86,204,242,0.5);
-      display: none;
-      z-index: 1000;
-      max-width: 90%;
-      text-align: center;
-      font-weight: bold;
-    }
-    
-    .notification.show {
-      display: block;
-      animation: slideDown 0.4s ease-out;
-    }
-    
-    @keyframes slideDown {
-      from {
-        transform: translate(-50%, -150%);
-        opacity: 0;
-      }
-      to {
-        transform: translate(-50%, 0);
-        opacity: 1;
-      }
-    }
-    
-    .filter-tabs {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
-      overflow-x: auto;
-      padding-bottom: 5px;
-    }
-    
-    .filter-tab {
-      padding: 10px 18px;
-      border: 2px solid #e0e0e0;
-      border-radius: 25px;
-      background: white;
-      cursor: pointer;
-      white-space: nowrap;
-      font-size: 14px;
-      transition: all 0.3s;
-    }
-    
-    .filter-tab.active {
-      background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
-      color: white;
-      border-color: transparent;
-      font-weight: bold;
-    }
-    
-    .add-btn {
-      position: fixed;
-      bottom: 30px;
-      right: 30px;
-      width: 65px;
-      height: 65px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #FFE66D 0%, #FFAB73 100%);
-      color: #8B4513;
-      border: none;
-      font-size: 32px;
-      box-shadow: 0 8px 25px rgba(255, 230, 109, 0.5);
-      cursor: pointer;
-      transition: all 0.3s;
-      font-weight: bold;
-    }
-    
-    .add-btn:hover {
-      transform: scale(1.15) rotate(90deg);
-      box-shadow: 0 12px 35px rgba(255, 171, 115, 0.6);
-      background: linear-gradient(135deg, #FFAB73 0%, #FFE66D 100%);
-    }
-    
-    .feedback-badge {
-      font-size: 13px;
-      color: white;
-      background: linear-gradient(135deg, #4ECDC4 0%, #44A08D 100%);
-      padding: 8px 12px;
-      border-radius: 8px;
-      margin-top: 8px;
-      display: inline-block;
-      font-weight: bold;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工班管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            color: #667eea;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        .role-select {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .role-select h2 {
+            color: #333;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+        
+        .role-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .role-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 20px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .role-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .master-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        
+        .master-btn {
+            background: white;
+            border: 2px solid #667eea;
+            color: #667eea;
+            border-radius: 10px;
+            padding: 15px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .master-btn:active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .content {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .task-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .task-card h3 {
+            color: #333;
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+        
+        .task-info {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        
+        .task-status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-top: 8px;
+        }
+        
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-completed {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 20px;
+            font-size: 14px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            color: #333;
+            font-size: 14px;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 30px;
+            color: #666;
+        }
+    </style>
 </head>
 <body>
-
-<!-- 通知 -->
-<div class="notification" id="notification"></div>
-
-<!-- 登入頁 -->
-<div class="page active" id="loginPage">
-  <div class="container">
-    <div class="login-box">
-      <h2>🔧 工班管理系統</h2>
-      <p style="text-align: center; color: #666; margin-bottom: 10px;">請選擇身份登入</p>
-      <div class="role-select">
-        <button class="role-btn" onclick="login('manager')">
-          <div class="role-icon">👔</div>
-          <div>統籌</div>
-        </button>
-        <button class="role-btn" onclick="login('master')">
-          <div class="role-icon">🔧</div>
-          <div>師傅</div>
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- 師傅選擇頁 -->
-<div class="page" id="masterSelectPage">
-  <div class="header">
-    <button class="back-btn" onclick="showPage('loginPage')">←</button>
-    <h2>選擇師傅</h2>
-  </div>
-  <div class="container">
-    <p style="text-align: center; color: #666; margin-bottom: 20px; font-size: 16px;">請選擇您的身份</p>
-    <div class="task-card" onclick="selectMaster('王師傅', '壁紙')">
-      <div class="task-title" style="text-align: center;">🎨 王師傅</div>
-      <div style="text-align: center; color: #999; margin-top: 8px;">專長：壁紙</div>
-    </div>
-    <div class="task-card" onclick="selectMaster('李師傅', '水電')">
-      <div class="task-title" style="text-align: center;">⚡ 李師傅</div>
-      <div style="text-align: center; color: #999; margin-top: 8px;">專長：水電</div>
-    </div>
-    <div class="task-card" onclick="selectMaster('陳師傅', '木工')">
-      <div class="task-title" style="text-align: center;">🪵 陳師傅</div>
-      <div style="text-align: center; color: #999; margin-top: 8px;">專長：木工</div>
-    </div>
-    <div class="task-card" onclick="selectMaster('林師傅', '隔間')">
-      <div class="task-title" style="text-align: center;">🧱 林師傅</div>
-      <div style="text-align: center; color: #999; margin-top: 8px;">專長：隔間</div>
-    </div>
-  </div>
-</div>
-
-<!-- 師傅任務列表 -->
-<div class="page" id="masterTasksPage">
-  <div class="header">
-    <button class="back-btn" onclick="showPage('masterSelectPage')">←</button>
-    <h2 id="masterName">我的任務</h2>
-  </div>
-  <div class="container">
-    <div class="task-card" onclick="showTaskDetail(1)">
-      <div class="task-title">🏠 台北店水電維修</div>
-      <div class="task-meta">
-        <span>📍 台北市中山區</span>
-        <span class="status-badge status-progress">🔄 進行中</span>
-      </div>
-      <div class="task-meta">
-        <span>🕐 2026/3/21 09:00</span>
-      </div>
-    </div>
-    
-    <div class="task-card">
-      <div class="task-title">🏠 高雄店水電檢查</div>
-      <div class="task-meta">
-        <span>📍 高雄市前金區</span>
-        <span class="status-badge status-pending">⏳ 待處理</span>
-      </div>
-      <div class="task-meta">
-        <span>🕐 2026/3/22 10:00</span>
-      </div>
-    </div>
-    
-    <div class="task-card">
-      <div class="task-title">🏠 台中店水管更換</div>
-      <div class="task-meta">
-        <span>📍 台中市西區</span>
-        <span class="status-badge status-done">✅ 已完成</span>
-      </div>
-      <div class="task-meta">
-        <span>🕐 2026/3/20 14:30</span>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- 任務詳情 -->
-<div class="page" id="taskDetailPage">
-  <div class="header">
-    <button class="back-btn" onclick="showPage('masterTasksPage')">←</button>
-    <h2>任務詳情</h2>
-  </div>
-  <div class="container">
-    <div class="detail-row">
-      <div class="detail-label">任務標題</div>
-      <div class="detail-value">🏠 台北店水電維修</div>
-    </div>
-    
-    <div class="detail-row">
-      <div class="detail-label">地點</div>
-      <div class="detail-value">📍 台北市中山區復興北路123號</div>
-    </div>
-    
-    <div class="detail-row">
-      <div class="detail-label">狀態</div>
-      <div class="detail-value"><span class="status-badge status-progress">🔄 進行中</span></div>
-    </div>
-    
-    <div class="detail-row">
-      <div class="detail-label">任務說明</div>
-      <div class="detail-value">冷氣不冷，需要檢查電路和冷媒。</div>
-    </div>
-    
-    <div class="detail-row">
-      <div class="detail-label">🔄 工程流程</div>
-      <div class="detail-value">
-        <div style="margin-top: 10px;">
-          <div style="display: flex; align-items: center; margin-bottom: 10px;">
-            <span class="status-badge status-done" style="margin: 0;">✅ 已完成</span>
-            <span style="margin-left: 10px; color: #666;">1. 壁紙 - 王師傅（3/20 完工）</span>
-          </div>
-          <div style="margin-left: 20px; border-left: 3px solid #4ECDC4; padding-left: 20px; margin-bottom: 10px;">
-            <div style="display: flex; align-items: center; margin-bottom: 10px;">
-              <span class="status-badge status-progress" style="margin: 0;">🔄 進行中</span>
-              <span style="margin-left: 10px; color: #333; font-weight: bold;">2. 水電 - 李師傅（預計 3/22 完工）</span>
-            </div>
-          </div>
-          <div style="margin-left: 20px; border-left: 3px dashed #ddd; padding-left: 20px; margin-bottom: 10px;">
-            <div style="display: flex; align-items: center; margin-bottom: 10px;">
-              <span class="status-badge status-pending" style="margin: 0;">⏳ 待進場</span>
-              <span style="margin-left: 10px; color: #999;">3. 木工 - 陳師傅（預計 3/23 進場）</span>
-            </div>
-          </div>
-          <div style="margin-left: 20px; border-left: 3px dashed #ddd; padding-left: 20px;">
-            <div style="display: flex; align-items: center;">
-              <span class="status-badge status-pending" style="margin: 0;">⏳ 待進場</span>
-              <span style="margin-left: 10px; color: #999;">4. 隔間 - 林師傅（預計 3/25 進場）</span>
-            </div>
-          </div>
+    <div class="container">
+        <!-- 标题 -->
+        <div class="header">
+            <h1>🔧 工班管理系统</h1>
         </div>
-      </div>
-    </div>
-    
-    <div class="feedback-section">
-      <h3>📝 任務回饋</h3>
-      <textarea id="feedbackText" rows="5" placeholder="請輸入回饋內容，例如：已檢查完畢，發現電路老舊需要更換..."></textarea>
-      
-      <div class="image-upload">
-        <div class="detail-label">📷 上傳照片（最多3張）</div>
-        <div class="image-preview">
-          <div class="image-slot" id="img1" onclick="uploadImage(1)">+</div>
-          <div class="image-slot" id="img2" onclick="uploadImage(2)">+</div>
-          <div class="image-slot" id="img3" onclick="uploadImage(3)">+</div>
+        
+        <!-- 角色选择 -->
+        <div id="roleSelect" class="role-select">
+            <h2>请选择身分</h2>
+            <div class="role-buttons">
+                <button class="role-btn" onclick="selectRole('master')">👷 师傅</button>
+                <button class="role-btn" onclick="selectRole('manager')">👔 统筹</button>
+            </div>
+            
+            <div id="masterSelect" class="hidden">
+                <h2 style="margin-top: 20px; margin-bottom: 15px; color: #333; font-size: 18px;">选择师傅</h2>
+                <div class="master-buttons">
+                    <button class="master-btn" onclick="selectMaster('王师傅')">👷 王师傅<br><small>壁纸</small></button>
+                    <button class="master-btn" onclick="selectMaster('李师傅')">👷 李师傅<br><small>水电</small></button>
+                    <button class="master-btn" onclick="selectMaster('陈师傅')">👷 陈师傅<br><small>木工</small></button>
+                    <button class="master-btn" onclick="selectMaster('林师傅')">👷 林师傅<br><small>隔间</small></button>
+                </div>
+            </div>
         </div>
-      </div>
-      
-      <button class="btn btn-secondary" onclick="submitFeedback()">💬 提交回饋</button>
+        
+        <!-- 内容区 -->
+        <div id="content" class="content hidden">
+            <!-- 动态载入内容 -->
+        </div>
     </div>
-    
-    <button class="btn btn-primary" onclick="completeTask()">✅ 標記完成</button>
-  </div>
-</div>
 
-<!-- 統籌管理頁 -->
-<div class="page" id="managerPage">
-  <div class="header">
-    <button class="back-btn" onclick="showPage('loginPage')">←</button>
-    <h2>任務管理</h2>
-  </div>
-  <div class="container">
-    <div class="filter-tabs">
-      <button class="filter-tab active">全部</button>
-      <button class="filter-tab">壁紙</button>
-      <button class="filter-tab">水電</button>
-      <button class="filter-tab">木工</button>
-      <button class="filter-tab">隔間</button>
-    </div>
-    
-    <div class="task-card">
-      <div class="task-title">🏠 台北店裝潢工程</div>
-      <div class="task-meta">
-        <span>📍 台北中山</span>
-        <span class="status-badge status-progress">🔄 進行中（2/4）</span>
-      </div>
-      <div style="margin-top: 10px; padding: 10px; background: #f9f9f9; border-radius: 8px; font-size: 13px;">
-        <div style="color: #4ECDC4; margin-bottom: 5px;">✅ 壁紙-王師傅（已完工）</div>
-        <div style="color: #FF6B6B; margin-bottom: 5px; font-weight: bold;">🔄 水電-李師傅（進行中）</div>
-        <div style="color: #999; margin-bottom: 5px;">⏳ 木工-陳師傅（待進場）</div>
-        <div style="color: #999;">⏳ 隔間-林師傅（待進場）</div>
-      </div>
-      <div class="feedback-badge">
-        💬 李師傅：電路檢修完成，測試正常
-      </div>
-    </div>
-    
-    <div class="task-card">
-      <div class="task-title">🏠 高雄店木工裝潢</div>
-      <div class="task-meta">
-        <span>陳師傅 | 📍 高雄前金</span>
-        <span class="status-badge status-pending">⏳ 待處理</span>
-      </div>
-    </div>
-    
-    <div class="task-card">
-      <div class="task-title">🏠 台中店壁紙更換</div>
-      <div class="task-meta">
-        <span>王師傅 | 📍 台中西區</span>
-        <span class="status-badge status-done">✅ 已完成</span>
-      </div>
-      <div class="feedback-badge">
-        💬 順利完成，客戶很滿意 | 📷 3 張照片
-      </div>
-    </div>
-  </div>
-  
-  <button class="add-btn" onclick="showNotification('新增任務功能將在正式版中開啟 🚀')">+</button>
-</div>
-
-<script>
-let uploadedImages = 0;
-let currentMaster = '';
-let currentSkill = '';
-
-function showPage(pageId) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById(pageId).classList.add('active');
-}
-
-function login(role) {
-  if (role === 'manager') {
-    showPage('managerPage');
-  } else {
-    showPage('masterSelectPage');
-  }
-}
-
-function selectMaster(name, skill) {
-  currentMaster = name;
-  currentSkill = skill;
-  document.getElementById('masterName').textContent = name + ' 的任務';
-  showPage('masterTasksPage');
-  showNotification(`歡迎回來，${name}！`);
-}
-
-function showTaskDetail(taskId) {
-  showPage('taskDetailPage');
-}
-
-function uploadImage(slot) {
-  const imgSlot = document.getElementById('img' + slot);
-  if (!imgSlot.classList.contains('uploaded')) {
-    imgSlot.classList.add('uploaded');
-    imgSlot.textContent = '✓';
-    uploadedImages++;
-    showNotification(`已上傳照片 ${slot}/3`);
-  }
-}
-
-function submitFeedback() {
-  const text = document.getElementById('feedbackText').value;
-  if (!text) {
-    alert('請輸入回饋內容');
-    return;
-  }
-  
-  // 模擬發送通知
-  showNotification('💬 回饋已提交！統籌已收到 LINE 通知 🔔');
-  document.getElementById('feedbackText').value = '';
-}
-
-function completeTask() {
-  if (confirm('確定要標記此任務為完成嗎？\n\n完成後會自動通知下一位師傅進場！')) {
-    // 模擬發送完成通知
-    showNotification('🎉 任務已完成！統籌已收到 LINE 通知 🔔');
-    
-    // 2秒後顯示下一位師傅通知
-    setTimeout(() => {
-      showNotification('📱 已通知下一位師傅：陳師傅（木工）可以進場了！');
-    }, 2000);
-    
-    // 4秒後返回任務列表
-    setTimeout(() => {
-      showPage('masterTasksPage');
-    }, 4000);
-  }
-}
-
-function showNotification(message) {
-  const notif = document.getElementById('notification');
-  notif.textContent = message;
-  notif.classList.add('show');
-  setTimeout(() => {
-    notif.classList.remove('show');
-  }, 3000);
-}
-</script>
-
+    <script>
+        // API 网址（请替换成你的 GAS Web App 网址）
+        const API_URL = 'https://script.google.com/macros/s/AKfycbxFA8q4QRuOqE750jajJckqIgdVjvehLFLMrW9l9g6lo1FZiJoFdO7pEp2PRItnef1j/exec';
+        
+        let currentRole = '';
+        let currentMaster = '';
+        
+        // 选择角色
+        function selectRole(role) {
+            currentRole = role;
+            
+            if (role === 'master') {
+                document.getElementById('masterSelect').classList.remove('hidden');
+            } else {
+                document.getElementById('roleSelect').classList.add('hidden');
+                document.getElementById('content').classList.remove('hidden');
+                loadManagerView();
+            }
+        }
+        
+        // 选择师傅
+        function selectMaster(masterName) {
+            currentMaster = masterName;
+            document.getElementById('roleSelect').classList.add('hidden');
+            document.getElementById('content').classList.remove('hidden');
+            loadMasterView();
+        }
+        
+        // 载入师傅介面
+        async function loadMasterView() {
+            const content = document.getElementById('content');
+            content.innerHTML = `
+                <h2>📋 ${currentMaster}的任务</h2>
+                <div class="loading">载入中...</div>
+            `;
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        action: 'getMasterTasks',
+                        masterName: currentMaster
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success && result.tasks.length > 0) {
+                    let html = `<h2>📋 ${currentMaster}的任务</h2>`;
+                    
+                    result.tasks.forEach(task => {
+                        const statusClass = task.status === '已完成' ? 'status-completed' : 'status-pending';
+                        html += `
+                            <div class="task-card">
+                                <h3>${task.title}</h3>
+                                <div class="task-info">📍 ${task.location}</div>
+                                <div class="task-info">🔧 ${task.skill}</div>
+                                <div class="task-info">📝 ${task.description}</div>
+                                <span class="task-status ${statusClass}">${task.status}</span>
+                                ${task.status === '待处理' ? `
+                                    <button class="btn" onclick="showFeedbackForm('${task.id}')">提交回馈</button>
+                                    <button class="btn" onclick="markComplete('${task.id}')">标记完成</button>
+                                ` : ''}
+                            </div>
+                        `;
+                    });
+                    
+                    html += `<button class="btn btn-secondary" onclick="backToRoleSelect()">返回</button>`;
+                    content.innerHTML = html;
+                } else {
+                    content.innerHTML = `
+                        <h2>📋 ${currentMaster}的任务</h2>
+                        <p style="text-align: center; color: #666; padding: 30px;">目前没有任务</p>
+                        <button class="btn btn-secondary" onclick="backToRoleSelect()">返回</button>
+                    `;
+                }
+            } catch (error) {
+                content.innerHTML = `
+                    <h2>错误</h2>
+                    <p style="color: red;">载入失败：${error.message}</p>
+                    <button class="btn btn-secondary" onclick="backToRoleSelect()">返回</button>
+                `;
+            }
+        }
+        
+        // 载入统筹介面
+        function loadManagerView() {
+            const content = document.getElementById('content');
+            content.innerHTML = `
+                <h2>📝 新增任务</h2>
+                <div class="form-group">
+                    <label>任务标题 *</label>
+                    <input type="text" id="taskTitle" placeholder="例如：台北店水电维修">
+                </div>
+                <div class="form-group">
+                    <label>地点 *</label>
+                    <input type="text" id="taskLocation" placeholder="例如：台北市中山区">
+                </div>
+                <div class="form-group">
+                    <label>工种</label>
+                    <select id="taskSkill">
+                        <option value="壁纸">壁纸</option>
+                        <option value="水电">水电</option>
+                        <option value="木工">木工</option>
+                        <option value="隔间">隔间</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>指派师傅</label>
+                    <select id="taskMaster">
+                        <option value="王师傅">王师傅</option>
+                        <option value="李师傅">李师傅</option>
+                        <option value="陈师傅">陈师傅</option>
+                        <option value="林师傅">林师傅</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>任务说明 *</label>
+                    <textarea id="taskDescription" placeholder="请输入详细说明..."></textarea>
+                </div>
+                <button class="btn" onclick="createTask()">新增任务</button>
+                <button class="btn btn-secondary" onclick="backToRoleSelect()">返回</button>
+            `;
+        }
+        
+        // 新增任务
+        async function createTask() {
+            const title = document.getElementById('taskTitle').value;
+            const location = document.getElementById('taskLocation').value;
+            const skill = document.getElementById('taskSkill').value;
+            const masterName = document.getElementById('taskMaster').value;
+            const description = document.getElementById('taskDescription').value;
+            
+            if (!title || !location || !description) {
+                alert('请填写所有必填栏位！');
+                return;
+            }
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        action: 'createTask',
+                        taskData: {
+                            title: title,
+                            location: location,
+                            skill: skill,
+                            masterName: masterName,
+                            description: description
+                        }
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('任务新增成功！任务编号：' + result.taskId);
+                    loadManagerView();
+                } else {
+                    alert('新增失败：' + result.error);
+                }
+            } catch (error) {
+                alert('发生错误：' + error.message);
+            }
+        }
+        
+        // 显示回馈表单
+        function showFeedbackForm(taskId) {
+            const content = document.getElementById('content');
+            content.innerHTML = `
+                <h2>💬 提交回馈</h2>
+                <div class="form-group">
+                    <label>回馈内容 *</label>
+                    <textarea id="feedbackText" placeholder="请输入工作回馈..."></textarea>
+                </div>
+                <button class="btn" onclick="submitFeedback('${taskId}')">提交</button>
+                <button class="btn btn-secondary" onclick="loadMasterView()">返回</button>
+            `;
+        }
+        
+        // 提交回馈
+        async function submitFeedback(taskId) {
+            const feedbackText = document.getElementById('feedbackText').value;
+            
+            if (!feedbackText) {
+                alert('请输入回馈内容！');
+                return;
+            }
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        action: 'submitFeedback',
+                        taskId: taskId,
+                        masterName: currentMaster,
+                        feedbackText: feedbackText,
+                        imageUrls: []
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('回馈提交成功！');
+                    loadMasterView();
+                } else {
+                    alert('提交失败：' + result.error);
+                }
+            } catch (error) {
+                alert('发生错误：' + error.message);
+            }
+        }
+        
+        // 标记完成
+        async function markComplete(taskId) {
+            if (!confirm('确定要标记此任务为已完成吗？')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        action: 'completeTask',
+                        taskId: taskId,
+                        masterName: currentMaster
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('任务已完成！');
+                    loadMasterView();
+                } else {
+                    alert('操作失败：' + result.error);
+                }
+            } catch (error) {
+                alert('发生错误：' + error.message);
+            }
+        }
+        
+        // 返回角色选择
+        function backToRoleSelect() {
+            document.getElementById('content').classList.add('hidden');
+            document.getElementById('masterSelect').classList.add('hidden');
+            document.getElementById('roleSelect').classList.remove('hidden');
+            currentRole = '';
+            currentMaster = '';
+        }
+    </script>
 </body>
 </html>
