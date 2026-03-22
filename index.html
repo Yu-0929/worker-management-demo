@@ -473,21 +473,12 @@
             }
             
             try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: 'submitEstimatedTime',
-                        taskId: taskId,
-                        masterName: currentMaster,
-                        estimatedTime: estimatedDate
-                    })
+                await fetch(API_URL + '?action=submitEstimatedTime' + 
+                           '&taskId=' + encodeURIComponent(taskId) +
+                           '&masterName=' + encodeURIComponent(currentMaster) +
+                           '&estimatedTime=' + encodeURIComponent(estimatedDate), {
+                    method: 'GET'
                 });
-                
-                const result = await response.json();
-                console.log('API 回應:', result);
                 
                 alert('預估完成時間已提交！\n\n統籌已收到通知。');
                 loadMasterView();
@@ -546,16 +537,12 @@
                     imageUrls: []
                 };
                 
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(requestData)
+                await fetch(API_URL + '?action=' + requestData.action + 
+                           '&taskId=' + encodeURIComponent(taskId) +
+                           '&masterName=' + encodeURIComponent(currentMaster) +
+                           '&feedbackText=' + encodeURIComponent(feedbackText), {
+                    method: 'GET'
                 });
-                
-                const result = await response.json();
-                console.log('API 回應:', result);
                 
                 alert('回饋已提交！統籌已收到通知。');
                 loadMasterView();
@@ -580,20 +567,11 @@
             }
             
             try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: 'completeTask',
-                        taskId: currentTask.id,
-                        masterName: currentMaster
-                    })
+                await fetch(API_URL + '?action=completeTask' + 
+                           '&taskId=' + encodeURIComponent(currentTask.id) +
+                           '&masterName=' + encodeURIComponent(currentMaster), {
+                    method: 'GET'
                 });
-                
-                const result = await response.json();
-                console.log('API 回應:', result);
                 
                 alert('任務已標記為完成！\n\n統籌已收到通知。');
                 loadMasterView();
