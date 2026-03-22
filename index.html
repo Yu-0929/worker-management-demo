@@ -473,9 +473,8 @@
             }
             
             try {
-                await fetch(API_URL, {
+                const response = await fetch(API_URL, {
                     method: 'POST',
-                    mode: 'no-cors',
                     headers: {
                         'Content-Type': 'application/json',
                     },
@@ -486,6 +485,9 @@
                         estimatedTime: estimatedDate
                     })
                 });
+                
+                const result = await response.json();
+                console.log('API 回應:', result);
                 
                 alert('預估完成時間已提交！\n\n統籌已收到通知。');
                 loadMasterView();
@@ -544,14 +546,16 @@
                     imageUrls: []
                 };
                 
-                await fetch(API_URL, {
+                const response = await fetch(API_URL, {
                     method: 'POST',
-                    mode: 'no-cors',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify(requestData)
                 });
+                
+                const result = await response.json();
+                console.log('API 回應:', result);
                 
                 alert('回饋已提交！統籌已收到通知。');
                 loadMasterView();
@@ -576,9 +580,8 @@
             }
             
             try {
-                await fetch(API_URL, {
+                const response = await fetch(API_URL, {
                     method: 'POST',
-                    mode: 'no-cors',
                     headers: {
                         'Content-Type': 'application/json',
                     },
@@ -588,6 +591,9 @@
                         masterName: currentMaster
                     })
                 });
+                
+                const result = await response.json();
+                console.log('API 回應:', result);
                 
                 alert('任務已標記為完成！\n\n統籌已收到通知。');
                 loadMasterView();
@@ -642,9 +648,8 @@
             }
             
             try {
-                await fetch(API_URL, {
+                const response = await fetch(API_URL, {
                     method: 'POST',
-                    mode: 'no-cors',
                     headers: {
                         'Content-Type': 'application/json',
                     },
@@ -657,6 +662,9 @@
                         }
                     })
                 });
+                
+                const result = await response.json();
+                console.log('API 回應:', result);
                 
                 alert('案場已建立！');
                 loadManagerView();
@@ -897,9 +905,8 @@
             }
             
             try {
-                await fetch(API_URL, {
+                const response = await fetch(API_URL, {
                     method: 'POST',
-                    mode: 'no-cors',
                     headers: {
                         'Content-Type': 'application/json',
                     },
@@ -915,6 +922,9 @@
                         }
                     })
                 });
+                
+                const result = await response.json();
+                console.log('API 回應:', result);
                 
                 alert('任務已新增！');
                 showSiteList();
