@@ -111,7 +111,7 @@
             transition: transform 0.2s;
         }
         
-        .site-card:active {
+        .site-card:active, .task-card:active {
             transform: scale(0.98);
         }
         
@@ -162,6 +162,15 @@
             background: #6c757d;
         }
         
+        .btn-success {
+            background: #28a745;
+        }
+        
+        .btn-warning {
+            background: #ffc107;
+            color: #333;
+        }
+        
         .form-group {
             margin-bottom: 15px;
         }
@@ -206,6 +215,40 @@
             border-radius: 8px;
             margin-bottom: 15px;
         }
+        
+        .task-detail {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .task-detail-title {
+            color: #333;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        
+        .task-detail-row {
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .task-detail-row:last-child {
+            border-bottom: none;
+        }
+        
+        .task-detail-label {
+            color: #666;
+            font-size: 13px;
+            margin-bottom: 3px;
+        }
+        
+        .task-detail-value {
+            color: #333;
+            font-size: 15px;
+        }
     </style>
 </head>
 <body>
@@ -247,7 +290,7 @@
         let currentRole = '';
         let currentMaster = '';
         let allSites = [];
-        let selectedSite = null;
+        let currentTask = null;
         
         // JSONP 請求函數
         function jsonp(url, callback) {
@@ -322,12 +365,11 @@
                 tasks.forEach(task => {
                     const statusClass = task.status === '已完成' ? 'status-completed' : 'status-pending';
                     html += `
-                        <div class="task-card">
+                        <div class="task-card" onclick='showTaskDetail(${JSON.stringify(task)})'>
                             <h3>${task.title}</h3>
                             <div class="task-info">🆔 ${task.id}</div>
                             <div class="task-info">📍 ${task.location}</div>
                             <div class="task-info">🔧 ${task.skill}</div>
-                            <div class="task-info">📝 ${task.description}</div>
                             <span class="task-status ${statusClass}">${task.status}</span>
                         </div>
                     `;
@@ -337,6 +379,189 @@
             html += `<button class="btn btn-secondary" onclick="backToRoleSelect()">返回</button>`;
             
             content.innerHTML = html;
+        }
+        
+        // 顯示任務詳情
+        function showTaskDetail(task) {
+            currentTask = task;
+            const content = document.getElementById('content');
+            
+            const estimatedTimeDisplay = task.estimatedTime ? formatDate(task.estimatedTime) : '尚未填寫';
+            const isCompleted = task.status === '已完成';
+            
+            let html = `
+                <h2>📋 任務詳情</h2>
+                <div class="task-detail">
+                    <div class="task-detail-title">${task.title}</div>
+                    <div class="task-detail-row">
+                        <div class="task-detail-label">任務編號</div>
+                        <div class="task-detail-value">${task.id}</div>
+                    </div>
+                    <div class="task-detail-row">
+                        <div class="task-detail-label">地點</div>
+                        <div class="task-detail-value">${task.location}</div>
+                    </div>
+                    <div class="task-detail-row">
+                        <div class="task-detail-label">工種</div>
+                        <div class="task-detail-value">${task.skill}</div>
+                    </div>
+                    <div class="task-detail-row">
+                        <div class="task-detail-label">任務說明</div>
+                        <div class="task-detail-value">${task.description}</div>
+                    </div>
+                    <div class="task-detail-row">
+                        <div class="task-detail-label">狀態</div>
+                        <div class="task-detail-value">${task.status}</div>
+                    </div>
+                    <div class="task-detail-row">
+                        <div class="task-detail-label">預估完成時間</div>
+                        <div class="task-detail-value">${estimatedTimeDisplay}</div>
+                    </div>
+                </div>
+            `;
+            
+            if (!isCompleted) {
+                html += `
+                    <button class="btn btn-warning" onclick="showEstimatedTimeForm()">⏰ 提交預估完成時間</button>
+                    <button class="btn" onclick="showFeedbackForm()">💬 提交回饋</button>
+                    <button class="btn btn-success" onclick="confirmCompleteTask()">✅ 標記完成</button>
+                `;
+            }
+            
+            html += `<button class="btn btn-secondary" onclick="loadMasterView()">返回任務列表</button>`;
+            
+            content.innerHTML = html;
+        }
+        
+        // 顯示預估完成時間表單
+        function showEstimatedTimeForm() {
+            const content = document.getElementById('content');
+            content.innerHTML = `
+                <h2>⏰ 提交預估完成時間</h2>
+                <div class="form-group">
+                    <label>任務：${currentTask.title}</label>
+                </div>
+                <div class="form-group">
+                    <label>預估完成日期 *</label>
+                    <input type="date" id="estimatedDate">
+                </div>
+                <button class="btn" onclick="submitEstimatedTime()">提交</button>
+                <button class="btn btn-secondary" onclick="showTaskDetail(currentTask)">返回</button>
+            `;
+        }
+        
+        // 提交預估完成時間
+        async function submitEstimatedTime() {
+            const estimatedDate = document.getElementById('estimatedDate').value;
+            
+            if (!estimatedDate) {
+                alert('請選擇預估完成日期！');
+                return;
+            }
+            
+            try {
+                await fetch(API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'submitEstimatedTime',
+                        taskId: currentTask.id,
+                        masterName: currentMaster,
+                        estimatedTime: estimatedDate
+                    })
+                });
+                
+                alert('預估完成時間已提交！\n\n統籌已收到通知。');
+                currentTask.estimatedTime = estimatedDate;
+                showTaskDetail(currentTask);
+                
+            } catch (error) {
+                alert('發生錯誤：' + error.message);
+            }
+        }
+        
+        // 顯示回饋表單
+        function showFeedbackForm() {
+            const content = document.getElementById('content');
+            content.innerHTML = `
+                <h2>💬 提交回饋</h2>
+                <div class="form-group">
+                    <label>任務：${currentTask.title}</label>
+                </div>
+                <div class="form-group">
+                    <label>回饋內容 *</label>
+                    <textarea id="feedbackText" placeholder="請輸入工作回饋..."></textarea>
+                </div>
+                <button class="btn" onclick="submitFeedback()">提交</button>
+                <button class="btn btn-secondary" onclick="showTaskDetail(currentTask)">返回</button>
+            `;
+        }
+        
+        // 提交回饋
+        async function submitFeedback() {
+            const feedbackText = document.getElementById('feedbackText').value.trim();
+            
+            if (!feedbackText) {
+                alert('請輸入回饋內容！');
+                return;
+            }
+            
+            try {
+                await fetch(API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'submitFeedback',
+                        taskId: currentTask.id,
+                        masterName: currentMaster,
+                        feedbackText: feedbackText,
+                        imageUrls: []
+                    })
+                });
+                
+                alert('回饋已提交！');
+                showTaskDetail(currentTask);
+                
+            } catch (error) {
+                alert('發生錯誤：' + error.message);
+            }
+        }
+        
+        // 確認完成任務
+        function confirmCompleteTask() {
+            if (confirm('確定要標記此任務為已完成嗎？\n\n完成後將無法修改。')) {
+                completeTask();
+            }
+        }
+        
+        // 完成任務
+        async function completeTask() {
+            try {
+                await fetch(API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'completeTask',
+                        taskId: currentTask.id,
+                        masterName: currentMaster
+                    })
+                });
+                
+                alert('任務已標記為完成！');
+                loadMasterView();
+                
+            } catch (error) {
+                alert('發生錯誤：' + error.message);
+            }
         }
         
         // 載入統籌介面
@@ -506,12 +731,14 @@
             } else {
                 tasks.forEach(task => {
                     const statusClass = task.status === '已完成' ? 'status-completed' : 'status-pending';
+                    const estimatedTime = task.estimatedTime ? `⏰ 預估：${formatDate(task.estimatedTime)}` : '';
                     html += `
                         <div class="task-card">
                             <h3>${task.title}</h3>
                             <div class="task-info">📍 ${task.location}</div>
                             <div class="task-info">🔧 ${task.skill} | 👷 ${task.masterName}</div>
                             <div class="task-info">📝 ${task.description}</div>
+                            ${estimatedTime ? `<div class="task-info">${estimatedTime}</div>` : ''}
                             <span class="task-status ${statusClass}">${task.status}</span>
                         </div>
                     `;
