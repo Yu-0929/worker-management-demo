@@ -289,12 +289,54 @@
             const content = document.getElementById('content');
             content.innerHTML = `
                 <h2>📋 ${currentMaster}的任務</h2>
-                <p style="text-align: center; color: #666; padding: 30px;">
-                    目前沒有任務<br><br>
-                    <small>（如果有任務但沒顯示，請聯絡管理員）</small>
-                </p>
-                <button class="btn btn-secondary" onclick="backToRoleSelect()">返回</button>
+                <div class="loading">載入中...</div>
             `;
+            
+            // 使用 JSONP 取得師傅任務
+            jsonp(API_URL + '?action=getMasterTasks&masterName=' + encodeURIComponent(currentMaster), function(result) {
+                if (result.success && result.tasks) {
+                    renderMasterTasks(result.tasks);
+                } else {
+                    content.innerHTML = `
+                        <h2>📋 ${currentMaster}的任務</h2>
+                        <div class="error">載入失敗：${result.error || '未知錯誤'}</div>
+                        <button class="btn btn-secondary" onclick="backToRoleSelect()">返回</button>
+                    `;
+                }
+            });
+        }
+        
+        // 渲染師傅任務
+        function renderMasterTasks(tasks) {
+            const content = document.getElementById('content');
+            
+            let html = `<h2>📋 ${currentMaster}的任務</h2>`;
+            
+            if (tasks.length === 0) {
+                html += `
+                    <p style="text-align: center; color: #666; padding: 30px;">
+                        目前沒有任務
+                    </p>
+                `;
+            } else {
+                tasks.forEach(task => {
+                    const statusClass = task.status === '已完成' ? 'status-completed' : 'status-pending';
+                    html += `
+                        <div class="task-card">
+                            <h3>${task.title}</h3>
+                            <div class="task-info">🆔 ${task.id}</div>
+                            <div class="task-info">📍 ${task.location}</div>
+                            <div class="task-info">🔧 ${task.skill}</div>
+                            <div class="task-info">📝 ${task.description}</div>
+                            <span class="task-status ${statusClass}">${task.status}</span>
+                        </div>
+                    `;
+                });
+            }
+            
+            html += `<button class="btn btn-secondary" onclick="backToRoleSelect()">返回</button>`;
+            
+            content.innerHTML = html;
         }
         
         // 載入統籌介面
