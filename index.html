@@ -509,20 +509,33 @@
                 return;
             }
             
+            // 调试：确认数据
+            console.log('currentTask:', currentTask);
+            console.log('taskId:', currentTask ? currentTask.id : 'undefined');
+            
+            if (!currentTask || !currentTask.id) {
+                alert('錯誤：無法取得任務編號！請返回重新選擇任務。');
+                return;
+            }
+            
             try {
+                const requestData = {
+                    action: 'submitFeedback',
+                    taskId: currentTask.id,
+                    masterName: currentMaster,
+                    feedbackText: feedbackText,
+                    imageUrls: []
+                };
+                
+                console.log('發送數據：', requestData);
+                
                 await fetch(API_URL, {
                     method: 'POST',
                     mode: 'no-cors',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({
-                        action: 'submitFeedback',
-                        taskId: currentTask.id,
-                        masterName: currentMaster,
-                        feedbackText: feedbackText,
-                        imageUrls: []
-                    })
+                    body: JSON.stringify(requestData)
                 });
                 
                 alert('回饋已提交！');
